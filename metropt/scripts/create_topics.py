@@ -1,5 +1,5 @@
 from kafka.admin import KafkaAdminClient, NewTopic
-from prism.config import settings
+from metropt.config import settings
 
 def main():
     admin = KafkaAdminClient(bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS)
