@@ -11,5 +11,5 @@ jobs:
       - uses: astral-sh/setup-uv@v3
         with: { python-version: "3.11" }
       - run: uv sync
-      - run: uv run ruff check prism
+      - run: uv run ruff check metropt
       - run: uv run pytest -v tests
