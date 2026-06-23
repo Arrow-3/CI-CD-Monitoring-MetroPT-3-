@@ -1,7 +1,7 @@
 from __future__ import annotations
 import abc, logging
-from prism import kafka_utils
-from prism.config.settings import get_consumer_group_id
+from metropt import kafka_utils
+from metropt.config.settings import get_consumer_group_id
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(name)s %(levelname)s %(message)s")
