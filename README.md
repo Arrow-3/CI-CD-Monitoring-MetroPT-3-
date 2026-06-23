@@ -26,8 +26,7 @@ metropt/
 
 
 
-# Running the DataGenerator under uv
-"""
+## Running the DataGenerator under uv
 uv sync                                         # creates .venv, installs everything
 docker compose up -d                            # Kafka + ZooKeeper
 uv run python -m metropt.scripts.explore_data     # confirm column names first
