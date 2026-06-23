@@ -1,5 +1,5 @@
 import pandas as pd
-from prism.config import settings
+from metropt.config import settings
 
 df = pd.read_csv(settings.DATA_PATH, nrows=200_000)
 print("shape:", df.shape)
