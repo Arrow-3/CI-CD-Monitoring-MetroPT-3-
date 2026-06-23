@@ -11,7 +11,7 @@ TOPICS = {
 }
 
 def get_consumer_group_id(service_name: str) -> str:
-    return f"prism_{service_name.lower()}"
+    return f"metropt_{service_name.lower()}"
 
 # --- Data replay ---
 DATA_PATH = os.getenv("PRISM_DATA_PATH", "data/MetroPT3(AirCompressor).csv")
