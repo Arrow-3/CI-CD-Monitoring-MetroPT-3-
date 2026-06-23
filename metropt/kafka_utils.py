@@ -1,6 +1,6 @@
 from __future__ import annotations
 from kafka import KafkaProducer, KafkaConsumer
-from prism.config import settings
+from metropt.config import settings
 
 def get_producer() -> KafkaProducer:
     return KafkaProducer(
