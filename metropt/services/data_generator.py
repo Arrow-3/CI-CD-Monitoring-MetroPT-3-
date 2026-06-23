@@ -1,9 +1,9 @@
 from __future__ import annotations
 import logging, time
 import pandas as pd
-from prism import kafka_utils
-from prism.config import settings
-from prism.dtos import RawDataDTO
+from metropt import kafka_utils
+from metropt.config import settings
+from metropt.dtos import RawDataDTO
 
 class DataGeneratorService:
     name = "datageneratorservice"
