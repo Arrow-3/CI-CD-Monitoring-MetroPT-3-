@@ -15,26 +15,37 @@ class DataGeneratorService:
 
     def load(self) -> pd.DataFrame:
         #df = pd.read_csv(self.path)                     # It consumes lots of memory by pyarrow engine
-        df = pd.read_csv(self.path, dtype_backend="numpy") # It consumes less memory
-        if df.columns[0].lower().startswith("unnamed"):
-            df = df.drop(columns=df.columns[0])
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
-        return df.sort_values("timestamp").reset_index(drop=True)
+        return pd.read_csv(self.path, chunksize=5000)    # It consumes less memory
 
     def run(self) -> None:
-        df = self.load()
-        cols = [c for c in settings.ANALOG_COLS + settings.DIGITAL_COLS if c in df.columns]
-        self.log.info("streaming %d rows, %d sensors, %.0fx", len(df), len(cols), self.speed)
-        delay = 1.0 / self.speed
-        for _, row in df.iterrows():
-            dto = RawDataDTO(
-                ts=row["timestamp"].isoformat(),
-                product_id="APU", tool_id="metro-1",
-                raw={c: float(row[c]) for c in cols},
-            )
-            self.producer.send("raw_data_stream", dto.to_json())
-            time.sleep(delay)
-        self.producer.flush()
+        chunks = self.load()
+        for df in chunks:
+            # Clean and transform the current 5,000-row chunk
+            if df.columns[0].lower().startswith("unnamed"):
+                df = df.drop(columns=df.columns[0])
+
+            df["timestamp"] = pd.to_datetime(df["timestamp"])
+            df = df.sort_values("timestamp").reset_index(drop=True)
+
+            # Extract columns to stream
+            cols = [c for c in settings.ANALOG_COLS + settings.DIGITAL_COLS if c in df.columns]
+            self.log.info("streaming %d rows, %d sensors, %.0fx", len(df), len(cols), self.speed)
+            delay = 1.0 / self.speed  
+
+            # Stream individual rows to Kafka
+            for _, row in df.iterrows():
+                dto = RawDataDTO(
+                    ts=row["timestamp"].isoformat(),
+                    product_id="APU", 
+                    tool_id="metro-1",
+                    raw={c: float(row[c]) for c in cols},
+                )
+                self.producer.send("raw_data_stream", dto.to_json())
+                time.sleep(delay)   
+
+            # Flush at the end of each chunk to keep the Kafka buffer clean
+            self.producer.flush()
+
 
 if __name__ == "__main__":
     DataGeneratorService().run()
