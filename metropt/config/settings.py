@@ -14,7 +14,7 @@ def get_consumer_group_id(service_name: str) -> str:
     return f"metropt_{service_name.lower()}"
 
 # --- Data replay ---
-DATA_PATH = os.getenv("PRISM_DATA_PATH", ""C:\Drive W\Machine Learning\MetroPT -3\MetroPT3(CompressorDatase).csv"")
+DATA_PATH = os.getenv("PRISM_DATA_PATH", "C:\Drive W\Machine Learning\MetroPT -3\MetroPT3(CompressorDatase).csv")
 REPLAY_SPEED = float(os.getenv("PRISM_REPLAY_SPEED", "600"))  # 600x → ~6h of data per real minute
 
 # Sensor columns. VERIFY against your CSV header (explore_data prints it).
