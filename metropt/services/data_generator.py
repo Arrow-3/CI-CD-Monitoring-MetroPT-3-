@@ -14,7 +14,8 @@ class DataGeneratorService:
         self.log = logging.getLogger(self.name)
 
     def load(self) -> pd.DataFrame:
-        df = pd.read_csv(self.path)
+        #df = pd.read_csv(self.path)                     # It consumes lots of memory by pyarrow engine
+        df = pd.read_csv(self.path, dtype_backend="numpy") # It consumes less memory
         if df.columns[0].lower().startswith("unnamed"):
             df = df.drop(columns=df.columns[0])
         df["timestamp"] = pd.to_datetime(df["timestamp"])
