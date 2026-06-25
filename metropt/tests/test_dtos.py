@@ -1,4 +1,4 @@
-from prism.dtos import RawDataDTO
+from metropt.dtos import RawDataDTO
 
 def test_rawdata_roundtrip():
     dto = RawDataDTO(ts="2020-04-18T00:00:00+00:00", product_id="APU",
