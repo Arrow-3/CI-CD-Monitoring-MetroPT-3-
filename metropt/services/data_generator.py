@@ -15,16 +15,16 @@ class DataGeneratorService:
 
     def load(self) -> pd.DataFrame:
         #df = pd.read_csv(self.path)                     # It consumes lots of memory by pyarrow engine
-        return pd.read_csv(self.path, chunksize=5000)    # It consumes less memory
+        return pd.read_csv(self.path, chunksize=5000)    # It consumes less memory by standard engine
 
     def run(self) -> None:
         chunks = self.load()
         for df in chunks:
             # Clean and transform the current 5,000-row chunk
-            if df.columns[0].lower().startswith("unnamed"):
+            if df.columns[0].lower().startswith("unnamed"):     # Filters out all the unnamed instances
                 df = df.drop(columns=df.columns[0])
 
-            df["timestamp"] = pd.to_datetime(df["timestamp"])
+            df["timestamp"] = pd.to_datetime(df["timestamp"])   # Transforms timestamps in accordance to index values
             df = df.sort_values("timestamp").reset_index(drop=True)
 
             # Extract columns to stream
