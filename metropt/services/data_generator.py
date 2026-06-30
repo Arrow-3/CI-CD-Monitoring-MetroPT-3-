@@ -1,3 +1,6 @@
+"""Replays MetroPT-3 CSV sensor history to Kafka as validated RawDataDTO messages at configurable speed.
+Simulates live MetroPT sensor feeds by replaying archived CSV data into Kafka."""
+
 from __future__ import annotations
 import logging, time
 import pandas as pd

@@ -6,3 +6,18 @@ def test_rawdata_roundtrip():
     again = RawDataDTO.from_json(dto.to_json())
     assert again == dto
     assert again.to_ndarray().tolist() == [1.0, 3.4]
+
+
+from metropt.dtos import ProcessedRawDataDTO
+
+def test_processed_raw_roundtrip():
+    dto = ProcessedRawDataDTO(
+        timestamp="2020-02-01T00:00:00+00:00",
+        sensor_values=[1.0, 3.4],
+        sensor_names=["TP2", "Motor_current"],
+        metadata={"product_id": "APU", "tool_id": "metro-1", "label": 0},
+        quality_flags={"missing_values": False, "out_of_range": False,
+                       "schema_version": "v1.0"},
+    )
+    again = ProcessedRawDataDTO.from_json(dto.to_json())
+    assert again == dto

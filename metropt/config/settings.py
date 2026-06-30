@@ -32,3 +32,19 @@ FAILURE_WINDOWS = [
     ("2020-07-15 14:30:00", "2020-07-15 19:00:00"),
 ]
 PRE_FAILURE_HOURS = 6
+
+SCHEMA_VERSION = "v1.0"
+
+# Validation ranges per analog sensor: (min, max).
+# CALIBRATE these from explore_data output, not from these defaults.
+SENSOR_RANGES: dict[str, tuple[float, float]] = {
+    "TP2":             (-1.0,  12.0),
+    "TP3":             (-1.0,  12.0),
+    "H1":              (-1.0,  12.0),
+    "DV_pressure":     (-1.0,  12.0),
+    "Reservoirs":      (-1.0,  12.0),
+    "Oil_temperature": ( 0.0, 100.0),
+    "Motor_current":   ( 0.0,  10.0),
+}
+# Digital signals: must be 0 or 1.
+DIGITAL_VALID = {0.0, 1.0}  
