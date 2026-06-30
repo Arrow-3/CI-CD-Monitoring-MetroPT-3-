@@ -6,4 +6,6 @@ run-gen:  ; uv run python -m metropt.services.data_generator
 consume:  ; uv run python -m metropt.scripts.consume_raw
 run-gate:  ; uv run python -m metropt.services.data_gate
 consume-processed: ; uv run python -m metropt.scripts.consume_processed
+run-fe:           ; uv run python -m metropt.services.feature_extractor
+consume-features: ; uv run python -m metropt.scripts.consume_features
 test:     ; uv run pytest -v tests

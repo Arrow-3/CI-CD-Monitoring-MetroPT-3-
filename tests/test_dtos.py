@@ -21,3 +21,16 @@ def test_processed_raw_roundtrip():
     )
     again = ProcessedRawDataDTO.from_json(dto.to_json())
     assert again == dto
+
+
+from metropt.dtos import FeatureVectorDTO
+
+def test_feature_vector_roundtrip():
+    dto = FeatureVectorDTO(
+        ts="2020-02-01T00:00:00+00:00", product_id="APU",
+        fe_version="v1.0",
+        features={"Motor_current_mean": 0.035, "TP3_std": 0.012},
+    )
+    again = FeatureVectorDTO.from_json(dto.to_json())
+    assert again == dto
+    assert again.to_ndarray().tolist() == [0.035, 0.012]  # sorted keys    

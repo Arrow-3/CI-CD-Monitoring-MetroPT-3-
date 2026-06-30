@@ -48,3 +48,14 @@ SENSOR_RANGES: dict[str, tuple[float, float]] = {
 }
 # Digital signals: must be 0 or 1.
 DIGITAL_VALID = {0.0, 1.0}  
+
+
+# --- FeatureExtractor ---
+FE_VERSION = "v1.0"
+FE_WINDOW_SECONDS = 30
+# Which sensors get rolling stats. Digital signals don't — mean/std of 0/1
+# flags isn't meaningful here. (Counts of flips would be, but that's v2.)
+FE_ANALOG_FEATURES = ["TP2", "TP3", "H1", "DV_pressure", "Reservoirs",
+                      "Oil_temperature", "Motor_current"]
+# Statistics to compute per analog sensor.
+FE_STATS = ["mean", "std", "min", "max"]
