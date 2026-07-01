@@ -10,14 +10,23 @@ class BaseService(abc.ABC):
     name: str = "base"
     input_topic: str | None = None
 
-    def __init__(self):
+    def __init__(self, *, connect: bool = True):
         self.log = logging.getLogger(self.name)
+        self.producer = None
+        self.consumer = None
+        if connect:
+            self._connect_kafka()
+
+    def _connect_kafka(self) -> None:
         self.producer = kafka_utils.get_producer()
         if self.input_topic:
             self.consumer = kafka_utils.get_consumer(
                 self.input_topic, get_consumer_group_id(self.name))
 
     def publish(self, topic: str, dto) -> None:
+        if self.producer is None:
+            self._last_published = dto       # offline mode
+            return
         self.producer.send(topic, dto.to_json())
 
     @abc.abstractmethod

@@ -59,3 +59,12 @@ FE_ANALOG_FEATURES = ["TP2", "TP3", "H1", "DV_pressure", "Reservoirs",
                       "Oil_temperature", "Motor_current"]
 # Statistics to compute per analog sensor.
 FE_STATS = ["mean", "std", "min", "max"]
+
+
+
+# --- PrimaryModel ---
+PROJECT = "metropt"
+MODEL_TYPE = "primary"
+TRAIN_SAMPLE_LIMIT = 200_000        # cap rows for tractable training
+TRAIN_TEST_SPLIT = 0.2
+MODEL_PRED_THRESHOLD = 0.5          # prob ≥ threshold → label=1
