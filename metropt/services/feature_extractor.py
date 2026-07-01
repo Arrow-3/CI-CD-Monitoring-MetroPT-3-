@@ -13,8 +13,8 @@ class FeatureExtractorService(BaseService):
     input_topic = "processed_raw_data"
     output_topic = "feature_vectors"
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *, connect: bool = True):
+        super().__init__(connect=connect)
         self.window = pd.Timedelta(seconds=settings.FE_WINDOW_SECONDS)
         # One deque per analog sensor, each element is (timestamp, value).
         self.buffers: dict[str, Deque[Tuple[pd.Timestamp, float]]] = {

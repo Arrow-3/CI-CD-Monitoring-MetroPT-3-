@@ -25,8 +25,8 @@ class DataGateService(BaseService):
     input_topic = "raw_data_stream"
     output_topic = "processed_raw_data"
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *, connect: bool = True):
+        super().__init__(connect=connect)
         # Pre-parse failure windows once, as timezone-aware UTC.
         self._windows = [
             (pd.Timestamp(s, tz="UTC"), pd.Timestamp(e, tz="UTC"))
