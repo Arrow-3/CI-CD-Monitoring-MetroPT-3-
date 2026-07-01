@@ -68,3 +68,10 @@ MODEL_TYPE = "primary"
 TRAIN_SAMPLE_LIMIT = 200_000        # cap rows for tractable training
 TRAIN_TEST_SPLIT = 0.2
 MODEL_PRED_THRESHOLD = 0.5          # prob ≥ threshold → label=1
+
+
+# --- DimReducer ---
+DR_VERSION = "v1.0"
+DR_MODEL_TYPE = "dr"
+DR_BOOTSTRAP_SIZE = 500     # feature vectors to collect before fitting
+DR_N_COMPONENTS = 2

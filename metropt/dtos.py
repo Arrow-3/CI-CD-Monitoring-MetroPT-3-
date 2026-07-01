@@ -105,3 +105,25 @@ class PredictionDTO(BaseModel):
     @classmethod
     def from_json(cls, s: str) -> "PredictionDTO":
         return cls.model_validate_json(s)
+
+
+
+class Coordinates2DDTO(BaseModel):
+    ts: str
+    product_id: str
+    dr_version: str    # which reducer produced this
+    x: float
+    y: float
+
+    @field_validator("ts")
+    @classmethod
+    def _iso(cls, v: str) -> str:
+        datetime.fromisoformat(v.replace("Z", "+00:00"))
+        return v
+
+    def to_json(self) -> str:
+        return self.model_dump_json()
+
+    @classmethod
+    def from_json(cls, s: str) -> "Coordinates2DDTO":
+        return cls.model_validate_json(s)

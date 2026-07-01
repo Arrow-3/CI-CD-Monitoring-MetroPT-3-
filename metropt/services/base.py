@@ -14,6 +14,7 @@ class BaseService(abc.ABC):
         self.log = logging.getLogger(self.name)
         self.producer = None
         self.consumer = None
+        self._last_published = None  # To ensure the smooth run for the training as it starts from : None
         if connect:
             self._connect_kafka()
 
@@ -25,7 +26,7 @@ class BaseService(abc.ABC):
 
     def publish(self, topic: str, dto) -> None:
         if self.producer is None:
-            self._last_published = dto       # offline mode
+            self._last_published = dto       # offline mode / only reached when connect=False
             return
         self.producer.send(topic, dto.to_json())
 
