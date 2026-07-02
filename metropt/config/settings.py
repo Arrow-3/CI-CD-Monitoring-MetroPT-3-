@@ -75,3 +75,20 @@ DR_VERSION = "v1.0"
 DR_MODEL_TYPE = "dr"
 DR_BOOTSTRAP_SIZE = 500     # feature vectors to collect before fitting
 DR_N_COMPONENTS = 2
+
+
+# --- DistributionMonitor ---
+DM_MODEL_TYPE = "dm"
+DM_BASELINE_SIZE = 1000            # feature vectors used to build baseline
+DM_WINDOW_SIZE = 500               # rolling current window
+DM_TOP_K = 5                       # top-K per-feature KS distances to average
+DM_THRESHOLDS = {"warn": 0.20, "alert": 0.30, "critical": 0.40}
+DM_COOLDOWN_MESSAGES = 300         # min gap between events of the same severity
+
+
+# --- TransferLearning ---
+TL_TRIGGER_SEVERITY = {"critical"}          # which severities trigger retraining
+TL_RECENT_BUFFER_SIZE = 20_000              # rows of processed_raw_data to keep
+TL_MIN_POSITIVES = 100                      # skip retrain if too few labeled failures
+TL_RETRAIN_COOLDOWN_SECS = 120              # min wall-clock gap between retrains
+TL_PROMOTION_MARGIN = 0.02                  # new AUPRC must beat old by ≥ this

@@ -8,7 +8,7 @@ from metropt.storage import StorageManager
 
 class PrimaryModelService(BaseService):
     name = "primarymodelservice"
-    input_topic = "feature_vectors"
+    input_topics = ["feature_vectors", "model_update_complete"]
     output_topic = "predictions"
 
     def __init__(self, *, connect: bool = True):
@@ -30,7 +30,12 @@ class PrimaryModelService(BaseService):
         self.model_version = v
         self.log.info("loaded model %s with %d features", v, len(self.feature_names))
 
-    def handle(self, message: str) -> None:
+
+    def handle(self, message: str, topic: str | None = None) -> None:
+        if topic == "model_update_complete":
+            self._maybe_hot_reload(message)
+            return
+        # Everything below is exactly existing prediction logic, unchanged:
         if self.model is None:
             return
         try:
@@ -38,18 +43,33 @@ class PrimaryModelService(BaseService):
         except Exception:
             self.log.exception("rejecting malformed FeatureVectorDTO")
             return
-
-        # Align features to the training schema. Missing → 0; extra → ignored.
         x = np.array([fv.features.get(n, 0.0) for n in self.feature_names],
-                     dtype=float).reshape(1, -1)
+                    dtype=float).reshape(1, -1)
         prob = float(self.model.predict_proba(x)[0, 1])
         label = int(prob >= settings.MODEL_PRED_THRESHOLD)
-
         pred = PredictionDTO(
             ts=fv.ts, product_id=fv.product_id, fe_version=fv.fe_version,
             model_version=self.model_version, prob=prob, label=label,
         )
         self.publish(self.output_topic, pred)
+
+
+    def _maybe_hot_reload(self, message: str) -> None:
+        try:
+            evt = ModelUpdateCompleteDTO.from_json(message)
+        except Exception:
+            self.log.exception("bad ModelUpdateCompleteDTO")
+            return
+        if evt.promotion_decision != "promoted":
+            return
+        new_v = evt.bundle.get("primary_version")
+        if not new_v or new_v == self.model_version:
+            return
+        self.log.warning("hot-reloading primary model → %s", new_v)
+        bundle = self.sm.load_model(settings.PROJECT, settings.MODEL_TYPE, new_v)
+        self.model = bundle["model"]
+        self.feature_names = bundle["feature_names"]
+        self.model_version = new_v
 
 
 if __name__ == "__main__":

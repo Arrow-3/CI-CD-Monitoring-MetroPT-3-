@@ -127,3 +127,61 @@ class Coordinates2DDTO(BaseModel):
     @classmethod
     def from_json(cls, s: str) -> "Coordinates2DDTO":
         return cls.model_validate_json(s)
+
+
+
+class ShiftEventDTO(BaseModel):
+    ts: str
+    baseline_version: str
+    stream: str                   # e.g. "features"
+    score: float
+    severity: str                 # "warn" | "alert" | "critical"
+    window: Dict[str, Any]        # {size, start_ts, end_ts, top_features}
+
+    @field_validator("ts")
+    @classmethod
+    def _iso(cls, v: str) -> str:
+        datetime.fromisoformat(v.replace("Z", "+00:00"))
+        return v
+
+    @field_validator("severity")
+    @classmethod
+    def _sev(cls, v: str) -> str:
+        if v not in {"warn", "alert", "critical"}:
+            raise ValueError(f"severity must be warn|alert|critical, got {v}")
+        return v
+
+    def to_json(self) -> str:
+        return self.model_dump_json()
+
+    @classmethod
+    def from_json(cls, s: str) -> "ShiftEventDTO":
+        return cls.model_validate_json(s)
+
+
+
+class ModelUpdateCompleteDTO(BaseModel):
+    ts: str
+    bundle: Dict[str, str]        # {"fe": ..., "primary": ..., "dr": ..., "dm": ...}
+    eval_metrics: Dict[str, float]  # {"auroc": ..., "auprc": ..., "incumbent_auprc": ...}
+    promotion_decision: str       # "promoted" | "rejected"
+
+    @field_validator("ts")
+    @classmethod
+    def _iso(cls, v: str) -> str:
+        datetime.fromisoformat(v.replace("Z", "+00:00"))
+        return v
+
+    @field_validator("promotion_decision")
+    @classmethod
+    def _pd(cls, v: str) -> str:
+        if v not in {"promoted", "rejected"}:
+            raise ValueError(f"promotion_decision must be promoted|rejected, got {v}")
+        return v
+
+    def to_json(self) -> str:
+        return self.model_dump_json()
+
+    @classmethod
+    def from_json(cls, s: str) -> "ModelUpdateCompleteDTO":
+        return cls.model_validate_json(s)

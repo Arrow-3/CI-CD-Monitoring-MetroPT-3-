@@ -63,3 +63,47 @@ def test_coordinates_roundtrip():
         dr_version="v1.0", x=2.14, y=-3.40,
     )
     assert Coordinates2DDTO.from_json(dto.to_json()) == dto
+
+
+
+
+from metropt.dtos import ShiftEventDTO
+
+def test_shift_event_roundtrip():
+    dto = ShiftEventDTO(
+        ts="2020-04-17T00:00:00+00:00", baseline_version="20240101_000000",
+        stream="features", score=0.31, severity="warn",
+        window={"size": 500, "start_ts": "...", "end_ts": "...",
+                "top_features": [{"name": "TP3_mean", "ks": 0.42}]},
+    )
+    assert ShiftEventDTO.from_json(dto.to_json()) == dto
+
+def test_shift_event_severity_validated():
+    import pytest, pydantic
+    with pytest.raises(pydantic.ValidationError):
+        ShiftEventDTO(ts="2020-01-01T00:00:00+00:00", baseline_version="v",
+                     stream="features", score=0.1, severity="oops",
+                     window={"size": 1, "start_ts": "", "end_ts": "",
+                             "top_features": []})
+
+
+
+from metropt.dtos import ModelUpdateCompleteDTO
+
+def test_model_update_roundtrip():
+    dto = ModelUpdateCompleteDTO(
+        ts="2020-04-18T00:00:00+00:00",
+        bundle={"fe_version": "v1.0", "primary_version": "20260701_120000",
+                "dr_version": "20260701_110000", "dm_version": "20260701_110500"},
+        eval_metrics={"auroc": 0.94, "auprc": 0.62, "incumbent_auprc": 0.55},
+        promotion_decision="promoted",
+    )
+    assert ModelUpdateCompleteDTO.from_json(dto.to_json()) == dto
+
+def test_promotion_decision_validated():
+    import pytest, pydantic
+    with pytest.raises(pydantic.ValidationError):
+        ModelUpdateCompleteDTO(
+            ts="2020-04-18T00:00:00+00:00", bundle={}, eval_metrics={},
+            promotion_decision="maybe",
+        )

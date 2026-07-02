@@ -18,3 +18,14 @@ def get_consumer(topic: str, group_id: str) -> KafkaConsumer:
         auto_offset_reset="latest", # "earliest"
         enable_auto_commit=True,
     )
+
+
+def get_consumer_multi(topics: list[str], group_id: str):
+    return KafkaConsumer(
+        *topics,
+        bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
+        group_id=group_id,
+        value_deserializer=lambda v: v.decode("utf-8"),
+        auto_offset_reset="earliest",
+        enable_auto_commit=True,
+    )

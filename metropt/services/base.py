@@ -9,6 +9,7 @@ logging.basicConfig(level=logging.INFO,
 class BaseService(abc.ABC):
     name: str = "base"
     input_topic: str | None = None
+    input_topics: list[str] | None = None    # ← Introduced for letting multiple topics ingested - required for transfer learning service.
 
     def __init__(self, *, connect: bool = True):
         self.log = logging.getLogger(self.name)
@@ -20,9 +21,11 @@ class BaseService(abc.ABC):
 
     def _connect_kafka(self) -> None:
         self.producer = kafka_utils.get_producer()
-        if self.input_topic:
-            self.consumer = kafka_utils.get_consumer(
-                self.input_topic, get_consumer_group_id(self.name))
+        topics = self.input_topics or ([self.input_topic] if self.input_topic else [])
+        if topics:
+            self.consumer = kafka_utils.get_consumer_multi(
+                topics, get_consumer_group_id(self.name))
+
 
     def publish(self, topic: str, dto) -> None:
         if self.producer is None:
@@ -34,9 +37,16 @@ class BaseService(abc.ABC):
     def handle(self, message: str) -> None: ...
 
     def run(self) -> None:
-        self.log.info("starting; consuming %s", self.input_topic)
+        self.log.info("starting; consuming %s", self.input_topics or self.input_topic)
         for msg in self.consumer:
             try:
+                self.handle(msg.value, topic=msg.topic)
+            except TypeError:
+                # backward-compat for services whose handle() doesn't accept topic
                 self.handle(msg.value)
             except Exception:
                 self.log.exception("error handling message")
+
+
+
+
