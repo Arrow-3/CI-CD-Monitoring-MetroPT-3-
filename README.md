@@ -4,10 +4,7 @@ An event-driven ML system that continuously monitors industrial sensor data, det
 
 Built on the open-source [MetroPT-3 dataset](https://archive.ics.uci.edu/dataset/791/metropt+3+dataset) (Metro do Porto air production unit, 15 sensors at 1 Hz), the system demonstrates a full **observe → detect → adapt** loop across seven Kafka-connected microservices, with a live Streamlit dashboard for operator supervision.
 
-<p align="center">
-  <!-- Replace with a wide screenshot of your dashboard, ideally captured during a drift event -->
-  <img src="docs/images/dashboard_overview.png" alt="Live dashboard overview" width="900"/>
-</p>
+
 
 ---
 
@@ -22,6 +19,7 @@ The architecture is deliberately modular: seven single-responsibility services, 
 ---
 
 ## Architecture
+
 ┌─────────────────┐   raw_data_stream   ┌───────────────┐   processed_raw_data   ┌────────────────────┐
 │  DataGenerator  │ ──────────────────> │   DataGate    │ ─────────────────────> │ FeatureExtractor   │
 └─────────────────┘                     └───────────────┘                        └─────────┬──────────┘
@@ -40,17 +38,18 @@ The architecture is deliberately modular: seven single-responsibility services, 
 ▼
 (PrimaryModel hot-reloads)
 
-| Service | Responsibility |
-|---|---|
-| **DataGenerator** | Streams the MetroPT-3 CSV at a configurable speed (default 600×). |
-| **DataGate** | Validates schema, clips out-of-range values, flags quality issues, and derives labels from reported failure windows. |
-| **FeatureExtractor** | Computes rolling-window statistics (mean/std/min/max over 30 s) for the 7 analog sensors + passes 8 digital signals through, producing 36-dim feature vectors. |
-| **PrimaryModel** | XGBoost classifier serving live predictions with probability + label. Hot-reloads on promotion events. |
-| **DimReducer** | PCA (with `StandardScaler`) fit on a bootstrap window; projects live feature vectors to 2D for visualization. |
-| **DistributionMonitor** | Compares a rolling current window against a frozen baseline using per-feature KS distance. Emits `warn`/`alert`/`critical` events with cooldown to avoid alert storms. |
-| **TransferLearning** | On `critical` events (with wall-clock cooldown), retrains an XGBoost candidate on recent labeled data, evaluates against the incumbent, and either promotes or rejects. |
-| **UI (Streamlit)** | Live dashboard consuming all downstream topics for operator supervision. |
-| **Orchestrator** | Single-command lifecycle for all services with dependency-ordered startup and clean shutdown. |
+
+| Service                 | Responsibility                                                                                                                                                          |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DataGenerator**       | Streams the MetroPT-3 CSV at a configurable speed (default 600×).                                                                                                       |
+| **DataGate**            | Validates schema, clips out-of-range values, flags quality issues, and derives labels from reported failure windows.                                                    |
+| **FeatureExtractor**    | Computes rolling-window statistics (mean/std/min/max over 30 s) for the 7 analog sensors + passes 8 digital signals through, producing 36-dim feature vectors.          |
+| **PrimaryModel**        | XGBoost classifier serving live predictions with probability + label. Hot-reloads on promotion events.                                                                  |
+| **DimReducer**          | PCA (with `StandardScaler`) fit on a bootstrap window; projects live feature vectors to 2D for visualization.                                                           |
+| **DistributionMonitor** | Compares a rolling current window against a frozen baseline using per-feature KS distance. Emits `warn`/`alert`/`critical` events with cooldown to avoid alert storms.  |
+| **TransferLearning**    | On `critical` events (with wall-clock cooldown), retrains an XGBoost candidate on recent labeled data, evaluates against the incumbent, and either promotes or rejects. |
+| **UI (Streamlit)**      | Live dashboard consuming all downstream topics for operator supervision.                                                                                                |
+| **Orchestrator**        | Single-command lifecycle for all services with dependency-ordered startup and clean shutdown.                                                                           |
 
 
 ### Design principles
@@ -66,48 +65,36 @@ The architecture is deliberately modular: seven single-responsibility services, 
 
 ## Live dashboard
 
-<p align="center">
-  <!-- Full dashboard shot: header metrics, scatter, probability timeline, drift score, tables -->
-  <img src="docs/images/dashboard_full.png" alt="Full dashboard" width="900"/>
-</p>
+
 
 The dashboard consumes four Kafka topics and renders:
 
 **Header metrics** — Live throughput (predictions/sec, coords/sec), buffered drift events, current severity pill (🟢 healthy · 🟡 warn · 🟠 alert · 🔴 critical), and the active model version.
 
-<p align="center">
-  <img src="docs/images/dashboard_header.png" alt="Header metrics" width="900"/>
-</p>
+
 
 **Feature-space scatter (PCA)** — 2D projection of the 36-dim feature vectors, colored by predicted failure probability. Healthy operation clusters in green; pre-failure regions drift toward red.
 
-<p align="center">
-  <img src="docs/images/dashboard_scatter.png" alt="PCA scatter" width="600"/>
-</p>
+
 
 **Failure probability over time** — The primary model's output, with the 0.5 decision threshold overlaid. Sudden climbs correspond to the model recognizing a degradation signature.
 
-<p align="center">
-  <img src="docs/images/dashboard_probability.png" alt="Probability timeline" width="600"/>
-</p>
+
 
 **Distribution drift score** — Per-message drift score with the warn/alert/critical thresholds drawn as horizontal reference lines. This is the diagnostic view of the DistributionMonitor.
 
-<p align="center">
-  <img src="docs/images/dashboard_drift.png" alt="Drift score timeline" width="900"/>
-</p>
+
 
 **Recent drift events & model-update history** — Tabular views of the last ten shift events (with top drifting features) and the last ten retraining decisions (with AUPRC vs incumbent).
 
-<p align="center">
-  <img src="docs/images/dashboard_tables.png" alt="Event tables" width="900"/>
-</p>
+
 
 ---
 
 ## Quickstart
 
 ### Prerequisites
+
 - Python 3.11
 - [uv](https://github.com/astral-sh/uv) for dependency management
 - Docker Desktop (for Kafka + ZooKeeper)
@@ -193,19 +180,21 @@ Continuous integration runs the full suite plus lint on every PR via GitHub Acti
 
 Key settings live in `metropt/config/settings.py`:
 
-| Setting | Default | Purpose |
-|---|---|---|
-| `REPLAY_SPEED` | `600` | Stream acceleration factor (600× = 6 hours of data per minute of wall-clock) |
-| `FE_WINDOW_SECONDS` | `30` | Rolling-window size for feature statistics |
-| `DR_BOOTSTRAP_SIZE` | `500` | Samples before PCA is fit |
-| `DM_BASELINE_SIZE` | `1000` | Samples in the drift baseline |
-| `DM_WINDOW_SIZE` | `500` | Rolling current window for KS comparison |
-| `DM_THRESHOLDS` | `{warn: 0.15, alert: 0.25, critical: 0.40}` | Drift severity tiers |
-| `TL_TRIGGER_SEVERITY` | `{"critical"}` | Which severities cause retraining |
-| `TL_RETRAIN_COOLDOWN_SECS` | `120` | Wall-clock minimum between retrains |
-| `TL_PROMOTION_MARGIN` | `0.02` | AUPRC delta required to promote a candidate |
 
-All environment-configurable via matching `metropt_*` env vars.
+| Setting                    | Default                                     | Purpose                                                                      |
+| -------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------- |
+| `REPLAY_SPEED`             | `600`                                       | Stream acceleration factor (600× = 6 hours of data per minute of wall-clock) |
+| `FE_WINDOW_SECONDS`        | `30`                                        | Rolling-window size for feature statistics                                   |
+| `DR_BOOTSTRAP_SIZE`        | `500`                                       | Samples before PCA is fit                                                    |
+| `DM_BASELINE_SIZE`         | `1000`                                      | Samples in the drift baseline                                                |
+| `DM_WINDOW_SIZE`           | `500`                                       | Rolling current window for KS comparison                                     |
+| `DM_THRESHOLDS`            | `{warn: 0.15, alert: 0.25, critical: 0.40}` | Drift severity tiers                                                         |
+| `TL_TRIGGER_SEVERITY`      | `{"critical"}`                              | Which severities cause retraining                                            |
+| `TL_RETRAIN_COOLDOWN_SECS` | `120`                                       | Wall-clock minimum between retrains                                          |
+| `TL_PROMOTION_MARGIN`      | `0.02`                                      | AUPRC delta required to promote a candidate                                  |
+
+
+All environment-configurable via matching `metropt_`* env vars.
 
 ---
 
@@ -221,6 +210,7 @@ All environment-configurable via matching `metropt_*` env vars.
 MIT.
 
 ## Running the DataGenerator under uv
+
 ```
 uv sync                                         # creates .venv, installs everything 
 docker compose up -d                            # Kafka + ZooKeeper
@@ -230,3 +220,5 @@ uv run python -m metropt.services.data_generator  # terminal 1: stream MetroPT-3
 uv run python -m metropt.scripts.consume_raw      # terminal 2: verify RawDataDTO flowing   ```
 
 ---
+```
+
