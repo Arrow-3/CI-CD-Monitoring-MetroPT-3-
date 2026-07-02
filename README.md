@@ -1,14 +1,3 @@
-# CI-CD-Monitoring-MetroPT-3-
-
-## Running the DataGenerator under uv
-```
-uv sync                                         # creates .venv, installs everything 
-docker compose up -d                            # Kafka + ZooKeeper
-uv run python -m metropt.scripts.explore_data     # confirm column names first
-uv run python -m metropt.scripts.create_topics    # the 7 topics
-uv run python -m metropt.services.data_generator  # terminal 1: stream MetroPT-3
-uv run python -m metropt.scripts.consume_raw      # terminal 2: verify RawDataDTO flowing   ```
-
 # Adaptive Condition Monitoring on MetroPT-3
 
 An event-driven ML system that continuously monitors industrial sensor data, detects distribution shifts, and adapts its models automatically — all without human intervention.
@@ -62,6 +51,7 @@ The architecture is deliberately modular: seven single-responsibility services, 
 | **TransferLearning** | On `critical` events (with wall-clock cooldown), retrains an XGBoost candidate on recent labeled data, evaluates against the incumbent, and either promotes or rejects. |
 | **UI (Streamlit)** | Live dashboard consuming all downstream topics for operator supervision. |
 | **Orchestrator** | Single-command lifecycle for all services with dependency-ordered startup and clean shutdown. |
+
 
 ### Design principles
 
@@ -229,3 +219,14 @@ All environment-configurable via matching `metropt_*` env vars.
 ## License
 
 MIT.
+
+## Running the DataGenerator under uv
+```
+uv sync                                         # creates .venv, installs everything 
+docker compose up -d                            # Kafka + ZooKeeper
+uv run python -m metropt.scripts.explore_data     # confirm column names first
+uv run python -m metropt.scripts.create_topics    # the 7 topics
+uv run python -m metropt.services.data_generator  # terminal 1: stream MetroPT-3
+uv run python -m metropt.scripts.consume_raw      # terminal 2: verify RawDataDTO flowing   ```
+
+---
