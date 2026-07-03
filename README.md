@@ -68,42 +68,25 @@ The architecture is deliberately modular: seven single-responsibility services, 
 
 ## Live dashboard
 
-<p align="center">
-  <!-- Full dashboard shot: header metrics, scatter, probability timeline, drift score, tables -->
-  <img src=""Dashboard.png"" alt="Full dashboard" width="900"/>
-</p>
-
+![](Dashboard.png)
 The dashboard consumes four Kafka topics and renders:
 
 **Header metrics** — Live throughput (predictions/sec, coords/sec), buffered drift events, current severity pill (🟢 healthy · 🟡 warn · 🟠 alert · 🔴 critical), and the active model version.
 
-<p align="center">
-  <img src=""Dashboard_Header.png"" alt="Header metrics" width="900"/>
-</p>
+![](Dashboard_Header.png)
 
 **Feature-space scatter (PCA)** — 2D projection of the 36-dim feature vectors, colored by predicted failure probability. Healthy operation clusters in green; pre-failure regions drift toward red.
 
-<p align="center">
-  <img src=""PCA.png"" alt="PCA scatter" width="600"/>
-</p>
-
+![](PCA.png)
 **Failure probability over time** — The primary model's output, with the 0.5 decision threshold overlaid. Sudden climbs correspond to the model recognizing a degradation signature.
 
-<p align="center">
-  <img src=""Failure_probability.png"" alt="Probability timeline" width="600"/>
-</p>
-
+![](Failure_probability.png)
 **Distribution drift score** — Per-message drift score with the warn/alert/critical thresholds drawn as horizontal reference lines. This is the diagnostic view of the DistributionMonitor.
 
-<p align="center">
-  <img src=""Drift_Monitoring.png"" alt="Drift score timeline" width="900"/>
-</p>
-
+![](Drift_Monitoring.png)
 **Recent drift events & model-update history** — Tabular views of the last ten shift events (with top drifting features) and the last ten retraining decisions (with AUPRC vs incumbent).
 
-<p align="center">
-  <img src=""Drift_events.png"" alt="Event tables" width="900"/>
-</p>
+![](Drift_events.png)
 
 ---
 
