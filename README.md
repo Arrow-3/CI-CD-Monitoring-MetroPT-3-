@@ -73,7 +73,7 @@ The architecture is deliberately modular: seven single-responsibility services, 
   <img src=""Dashboard.png"" alt="Full dashboard" width="900"/>
 </p>
 
-<p align="center">
+
 !(Dashboard.png)
 The dashboard consumes four Kafka topics and renders:
 
