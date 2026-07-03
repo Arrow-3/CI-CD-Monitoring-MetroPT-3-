@@ -73,6 +73,8 @@ The architecture is deliberately modular: seven single-responsibility services, 
   <img src=""Dashboard.png"" alt="Full dashboard" width="900"/>
 </p>
 
+<p align="center">
+!(Dashboard.png)
 The dashboard consumes four Kafka topics and renders:
 
 **Header metrics** — Live throughput (predictions/sec, coords/sec), buffered drift events, current severity pill (🟢 healthy · 🟡 warn · 🟠 alert · 🔴 critical), and the active model version.
