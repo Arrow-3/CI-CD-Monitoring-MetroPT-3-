@@ -73,20 +73,20 @@ The dashboard consumes four Kafka topics and renders:
 
 **Header metrics** — Live throughput (predictions/sec, coords/sec), buffered drift events, current severity pill (🟢 healthy · 🟡 warn · 🟠 alert · 🔴 critical), and the active model version.
 
-![]("Dashboard_Header.png)
+![](Dashboard_Header.png)
 
 **Feature-space scatter (PCA)** — 2D projection of the 36-dim feature vectors, colored by predicted failure probability. Healthy operation clusters in green; pre-failure regions drift toward red.
 
-![]("PCA.png)
+![](PCA.png)
 **Failure probability over time** — The primary model's output, with the 0.5 decision threshold overlaid. Sudden climbs correspond to the model recognizing a degradation signature.
 
-![]("Failure_probability.png)
+![](Failure_probability.png)
 **Distribution drift score** — Per-message drift score with the warn/alert/critical thresholds drawn as horizontal reference lines. This is the diagnostic view of the DistributionMonitor.
 
-![]("Drift_Monitoring.png)
+![](Drift_Monitoring.png)
 **Recent drift events & model-update history** — Tabular views of the last ten shift events (with top drifting features) and the last ten retraining decisions (with AUPRC vs incumbent).
 
-![]("Drift_events.png)
+![](Drift_events.png)
 
 
 ---
