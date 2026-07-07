@@ -145,7 +145,7 @@ with left:
                 text=merged["ts"].astype(str), hoverinfo="text",
             ))
             fig.update_layout(height=420, margin=dict(l=0, r=0, t=10, b=0))
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.info("Aligning coordinates + predictions...")
     else:
@@ -163,7 +163,7 @@ with right:
                       annotation_text="threshold")
         fig.update_layout(height=420, margin=dict(l=0, r=0, t=10, b=0),
                           yaxis=dict(range=[0, 1]))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     else:
         st.info("Waiting for predictions...")
 
@@ -184,7 +184,7 @@ if not shifts.empty:
         fig.add_hline(y=val, line_dash="dot", line_color=color,
                       annotation_text=level)
     fig.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 else:
     st.info("No drift events yet — the monitor is still calibrating.")
 
@@ -198,7 +198,7 @@ with tcol1:
         display["top_features"] = shifts.tail(10)["window"].apply(
             lambda w: ", ".join(f["name"] for f in w.get("top_features", [])[:3])
         )
-        st.dataframe(display, use_container_width=True, hide_index=True)
+        st.dataframe(display, width="stretch", hide_index=True)
     else:
         st.write("—")
 
@@ -211,7 +211,7 @@ with tcol2:
             lambda m: round(m.get("auprc", 0), 3))
         display["vs_incumbent"] = updates.tail(10)["eval_metrics"].apply(
             lambda m: round(m.get("incumbent_auprc", 0), 3))
-        st.dataframe(display, use_container_width=True, hide_index=True)
+        st.dataframe(display, width="stretch", hide_index=True)
     else:
         st.write("—")
 
