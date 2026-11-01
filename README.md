@@ -23,28 +23,11 @@ The architecture is deliberately modular: seven single-responsibility services, 
 ## Architecture
 
 <p align="center">
-  <img src="Architechture.png" alt="Live dashboard overview" width="500"/>
+  <img src="Architechture.png" alt="Live dashboard overview" width="600"/>
 </p>
 
 
-┌─────────────────┐   raw_data_stream   ┌───────────────┐   processed_raw_data   ┌────────────────────┐
-│  DataGenerator  │ ──────────────────> │   DataGate    │ ─────────────────────> │ FeatureExtractor   │
-└─────────────────┘                     └───────────────┘                        └─────────┬──────────┘
-│ feature_vectors
-┌──────────────────────────────┼────────────────────────────┐
-▼                              ▼                            ▼
-┌───────────────┐             ┌────────────────┐            ┌────────────────────┐
-│  DimReducer   │             │  PrimaryModel  │            │ DistributionMonitor│
-└──────┬────────┘             └────────┬───────┘            └─────────┬──────────┘
-│ coordinates_nd                │ predictions                  │ shift_events
-▼                               ▼                              ▼
-┌─────────────────────────────────────┐
-│        TransferLearning             │◄─── processed_raw_data
-└─────────────────┬───────────────────┘
-│ model_update_complete
-▼
 
-(PrimaryModel hot-reloads)
 
 
 | Service | Responsibility |
