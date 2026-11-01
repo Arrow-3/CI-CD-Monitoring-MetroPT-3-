@@ -121,27 +121,6 @@ Ctrl-C the orchestrator terminal; it shuts services down in reverse dependency o
 
 ---
 
-## Repository layout
-
-metropt/
-├── config/settings.py          # Topics, thresholds, replay speed, failure windows
-├── dtos.py                     # Pydantic contracts for all Kafka messages
-├── kafka_utils.py              # Producer/consumer factories
-├── storage.py                  # Versioned artifact persistence
-├── services/
-│   ├── base.py                 # Consume-loop base class
-│   ├── data_generator.py       # → raw_data_stream
-│   ├── data_gate.py            # raw_data_stream → processed_raw_data
-│   ├── feature_extractor.py    # processed_raw_data → feature_vectors
-│   ├── primary_model.py        # feature_vectors → predictions (+ hot-reload)
-│   ├── dim_reducer.py          # feature_vectors → coordinates_nd
-│   ├── distribution_monitor.py # feature_vectors → shift_events
-│   └── transfer_learning.py    # shift_events + processed_raw_data → model_update_complete
-├── scripts/
-│   ├── create_topics.py
-│   ├── train_primary.py
-│   └── orchestrator.py
-└── ui/dashboard.py             # Streamlit dashboard
 
 ---
 
