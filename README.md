@@ -22,6 +22,11 @@ The architecture is deliberately modular: seven single-responsibility services, 
 
 ## Architecture
 
+<p align="center">
+  <img src="Architechture.png" alt="Live dashboard overview" width="900"/>
+</p>
+
+
 ┌─────────────────┐   raw_data_stream   ┌───────────────┐   processed_raw_data   ┌────────────────────┐
 │  DataGenerator  │ ──────────────────> │   DataGate    │ ─────────────────────> │ FeatureExtractor   │
 └─────────────────┘                     └───────────────┘                        └─────────┬──────────┘
