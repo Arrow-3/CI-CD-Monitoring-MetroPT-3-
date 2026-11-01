@@ -121,9 +121,6 @@ Ctrl-C the orchestrator terminal; it shuts services down in reverse dependency o
 
 ---
 
-
----
-
 ## Testing
 
 ```bash
