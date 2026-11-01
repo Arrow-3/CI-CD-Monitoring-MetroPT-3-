@@ -23,7 +23,7 @@ The architecture is deliberately modular: seven single-responsibility services, 
 ## Architecture
 
 <p align="center">
-  <img src="Architechture.png" alt="Live dashboard overview" width="900"/>
+  <img src="Architechture.png" alt="Live dashboard overview" width="500"/>
 </p>
 
 
