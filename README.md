@@ -1,11 +1,10 @@
 # Adaptive Condition Monitoring on MetroPT-3
 
-An event-driven ML system that continuously monitors industrial sensor data, detects distribution shifts, and adapts its models automatically — all without human intervention.
+An event-driven ML system that continuously monitors industrial sensor data, detects distribution shifts, and adapts its models automatically - all without human intervention.
 
 Built on the open-source [MetroPT-3 dataset](https://archive.ics.uci.edu/dataset/791/metropt+3+dataset) (Metro do Porto air production unit, 15 sensors at 1 Hz), the system demonstrates a full **observe → detect → adapt** loop across seven Kafka-connected microservices, with a live Streamlit dashboard for operator supervision.
 
 <p align="center">
-  <!-- Replace with a wide screenshot of your dashboard, ideally captured during a drift event -->
   <img src="docs/images/dashboard_overview.png" alt="Live dashboard overview" width="900"/>
 </p>
 
