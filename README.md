@@ -1,4 +1,4 @@
-# Adaptive Condition Monitoring on MetroPT-3
+# End-to-End Data Pipeline for Adaptive Condition Monitoring on MetroPT-3
 
 An event-driven ML system that continuously monitors industrial sensor data, detects distribution shifts, and adapts its models automatically - all without human intervention.
 
