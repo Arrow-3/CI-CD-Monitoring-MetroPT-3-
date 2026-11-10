@@ -1,4 +1,4 @@
-# End-to-End Data Pipeline for Adaptive Condition Monitoring on MetroPT-3 Dataset
+# End-to-End Data Pipeline for Adaptive Condition Monitoring on MetroPT-3 Real World Dataset
 
 An event-driven ML system that continuously monitors industrial sensor data, detects distribution shifts, and adapts its models automatically - all without human intervention.
 
