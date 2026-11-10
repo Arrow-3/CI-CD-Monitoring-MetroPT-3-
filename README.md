@@ -4,9 +4,10 @@ An event-driven ML system that continuously monitors industrial sensor data, det
 
 Built on the open-source [MetroPT-3 dataset](https://archive.ics.uci.edu/dataset/791/metropt+3+dataset) (Metro do Porto air production unit, 15 sensors at 1 Hz), the system demonstrates a full **observe → detect → adapt** loop across seven Kafka-connected microservices, with a live Streamlit dashboard for operator supervision.
 
-%<p align="center">
-%  <img src="Dashboard.png" alt="Live dashboard overview" width="900"/>
-%</p>
+<!--
+<p align="center">
+  <img src="Dashboard.png" alt="Live dashboard overview" width="900"/>
+</p> -->
 
 ---
 
