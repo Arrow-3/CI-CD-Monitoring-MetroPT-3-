@@ -43,6 +43,7 @@ The architecture is deliberately modular: seven single-responsibility services, 
 | **UI (Streamlit)** | Live dashboard consuming all downstream topics for operator supervision. |
 | **Orchestrator** | Single-command lifecycle for all services with dependency-ordered startup and clean shutdown. |
 
+
 ### Design principles
 
 - **Event-driven.** No direct service-to-service calls. All communication is asynchronous over Kafka.
@@ -51,6 +52,110 @@ The architecture is deliberately modular: seven single-responsibility services, 
 - **Train-offline / serve-online.** PrimaryModel is trained via a standalone script; the service reads the latest artifact from `StorageManager`.
 - **Adapt-in-place.** TransferLearning retrains during runtime; PrimaryModel picks up new models via `model_update_complete` messages without restart.
 - **Every artifact is versioned.** UTC-timestamped model, baseline, and reducer files live under `data/artifacts/` for reproducibility.
+
+## Data contracts
+
+Every Kafka topic has a single writer and an explicit schema. Consumers may change independently; producers may not change a topic's schema without a version bump and a parallel-topic migration.
+
+| Topic | Writer | Readers | DTO | Key | Version field | Retention |
+|---|---|---|---|---|---|---|
+| `raw_data_stream` | DataGenerator | DataGate | `RawDataDTO` | `tool_id` | — | 1 h |
+| `processed_raw_data` | DataGate | FeatureExtractor, DistributionMonitor | `ProcessedRawDataDTO` | `tool_id` | `schema_version` | 1 h |
+| `feature_vectors` | FeatureExtractor | PrimaryModel, DimReducer, DistributionMonitor | `FeatureVectorDTO` | `product_id` | `fe_version` | 6 h |
+| `predictions` | PrimaryModel | DistributionMonitor, UI, Bridge | `PredictionDTO` | `product_id` | `model_version` | 24 h |
+| `coordinates_nd` | DimReducer | UI, Bridge | `Coordinates2DDTO` | `product_id` | `dr_version` | 6 h |
+| `shift_events` | DistributionMonitor | TransferLearning, UI, Bridge | `ShiftEventDTO` | `baseline_version` | `baseline_version` | 7 d |
+| `model_update_complete` | TransferLearning | PrimaryModel, UI, Bridge | `ModelUpdateCompleteDTO` | — | `bundle.primary_version` | 30 d |
+
+**Rules in force.**
+
+- Compatible evolution (new optional field) is a minor version bump; readers must tolerate unknown fields.
+- Breaking evolution (field removed or retyped) ships as `<topic>_v2` with a migration window where both topics run; readers switch one at a time.
+- Keys are chosen for ordering guarantees: all messages for one tool land on the same partition, so FeatureExtractor's rolling window stays consistent.
+- A production deployment would promote these contracts into a schema registry (Confluent Schema Registry with Avro) rather than Pydantic-at-the-boundary. This project keeps Pydantic for the lower barrier to entry.
+  
+---
+## Delivery guarantees & backpressure
+
+**Delivery semantics.** The pipeline runs **at-least-once** end to end.
+
+- Producers use the Kafka Python client's idempotent mode, so a retried publish doesn't duplicate inside a session.
+- Consumers auto-commit offsets every 5 s. A crash between a `handle()` call and its commit will reprocess that batch on restart.
+- Downstream services tolerate replays because every message carries a monotonic timestamp, and operations are either idempotent (feature extraction is a pure function of its window) or additive with a cooldown (DistributionMonitor's severity cooldown suppresses a replayed shift alarm within the same cooldown window).
+
+The dashboard bridge uses `auto_offset_reset="latest"` deliberately: the dashboard shows live state, and a reconnecting browser should not be shown hours of stale events.
+
+**Backpressure policy per service.**
+
+| Service | Policy on slow consumer | Policy on crash |
+|---|---|---|
+| **DataGenerator** | Blocks the producer; replay speed drops. | Exits; orchestrator restarts. CSV offset re-read from state file. |
+| **DataGate / FeatureExtractor** | Natural Kafka backpressure (fetch pauses when poll loop stalls). | Reprocesses from last committed offset; feature window warms up for 30 s. |
+| **PrimaryModel** | Same. Prediction lag surfaces as consumer lag on `feature_vectors`. | Reprocesses; idempotent since prediction is a pure function of input. |
+| **DimReducer** | Same. On restart, re-reads the persisted PCA fit; skips bootstrap. | Reprocesses; transform is deterministic. |
+| **DistributionMonitor** | Same. Baseline persisted; current window rebuilds within `DM_WINDOW_SIZE` messages. | Reprocesses; cooldowns reset, so a brief duplicate alarm is possible. |
+| **TransferLearning** | Drops candidate retrains outside cooldown. Never queues. | Any in-flight retrain is abandoned; incumbent model remains active. |
+| **Bridge → React** | Per-client asyncio queue, maxsize 500, **drop-oldest on full**. | Client reconnects via EventSource, resumes from `latest`. |
+
+**Dead-letter topic.** Each service writes rejected messages (schema failures, out-of-range beyond clip tolerance, Pydantic validation errors) to `dlq_<service>`. DLQ topics have 30-day retention and are the first place to look during an incident.
+
+---
+
+## Observability
+
+**Structured logs.** Every service logs line-delimited JSON with the same shape: `{ts, level, service, trace_id, msg, ...fields}`. The `trace_id` is minted by DataGate on ingest and copied verbatim into every downstream DTO, so one record can be followed across all seven services with a single `jq` filter.
+
+**Metrics.** Each service exposes Prometheus metrics on `:9100/metrics`. Standard set per service:
+
+| Metric | Type | Scope |
+|---|---|---|
+| `metropt_messages_in_total{topic}` | counter | all services |
+| `metropt_messages_out_total{topic}` | counter | all services |
+| `metropt_messages_dlq_total{reason}` | counter | all services |
+| `metropt_handle_seconds{service}` | histogram (p50/p95/p99) | all services |
+| `metropt_consumer_lag{topic,partition}` | gauge | scraped from Kafka admin API |
+| `metropt_model_inference_seconds` | histogram | PrimaryModel only |
+| `metropt_drift_score` | gauge | DistributionMonitor only |
+| `metropt_e2e_latency_seconds` | histogram | Bridge (now() − predictions.ts) |
+
+A Grafana dashboard JSON lives at `observability/grafana/metropt.json`.
+
+**Health endpoints.** Each service exposes:
+
+| Endpoint | Meaning |
+|---|---|
+| `GET /healthz` | Process is alive (Kubernetes liveness). |
+| `GET /readyz` | Service has completed bootstrap (DimReducer's 500 samples, DistributionMonitor's 1000-sample baseline, PrimaryModel has a loaded artifact). |
+
+**Tracing.** OpenTelemetry spans are emitted around each `handle()` call, with the DTO's `trace_id` propagated as the span's trace context. Local development uses an OTLP exporter to a Jaeger container in `docker-compose.yml`; production would point at the org's collector.
+
+---
+
+## Deployment
+
+**Development mode.** All seven services run as threads in one Python process via the orchestrator. Kafka and ZooKeeper run in Docker. One `make run` command. Hot-reload of model artifacts works the same as in production. This is the mode the quickstart above describes.
+
+**Production mode.** Each service ships as its own container; orchestration is Kubernetes with one Deployment per service.
+
+```
+deployment/
+  docker/
+    Dockerfile.base              # shared Python + uv layer
+    Dockerfile.datagenerator     # FROM base, entrypoint = python -m metropt.services.data_generator
+    Dockerfile.datagate
+    ... (one per service)
+  k8s/
+    namespace.yaml
+    kafka.yaml                   # Strimzi operator, 3 brokers, 3 partitions per topic
+    datagate-deployment.yaml
+    featureextractor-deployment.yaml
+    primarymodel-deployment.yaml
+    dimreducer-deployment.yaml
+    distributionmonitor-deployment.yaml
+    transferlearning-deployment.yaml
+    bridge-deployment.yaml
+    servicemonitors.yaml         # Prometheus Operator
+```
 
 ---
 
